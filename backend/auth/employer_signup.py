@@ -22,6 +22,14 @@ def register_employer():
 
     data = request.json
 
+    if not data:
+        return jsonify({"status": "rejected", "reason": "Request body must be JSON"}), 400
+
+    required_fields = ["domain", "company_name", "company_type", "employer_email"]
+    for field in required_fields:
+        if field not in data:
+            return jsonify({"status": "rejected", "reason": f"Missing required field: {field}"}), 400
+
     domain = data["domain"]
     company_name = data["company_name"]
     company_type = data["company_type"]
