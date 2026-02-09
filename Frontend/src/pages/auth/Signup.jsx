@@ -1,32 +1,69 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/Button';
 import { Input, Label } from '../../components/ui/Input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Progress } from '../../components/ui/Badge';
-import { ShieldCheck, User, Briefcase, Upload, CheckCircle } from 'lucide-react';
+import { ShieldCheck, User, Briefcase, Upload, CheckCircle, Building2, Mail } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 export function Signup() {
     const navigate = useNavigate();
     const [step, setStep] = useState(1);
     const [role, setRole] = useState('student'); // 'student' or 'employer'
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [otp, setOtp] = useState(['', '', '', '', '', '']);
+
     const [formData, setFormData] = useState({
         email: '',
         password: '',
         confirmPassword: '',
-        file: null
+        file: null,
+        // Employer specific fields
+        companyName: '',
+        companyType: 'mnc',
+        cin: '',
+        pan: '',
+        domain: ''
     });
 
-    const totalSteps = 3;
+    // Extract domain from email for employers
+    useEffect(() => {
+        if (role === 'employer' && formData.email.includes('@')) {
+            const domain = formData.email.split('@')[1];
+            setFormData(prev => ({ ...prev, domain }));
+        }
+    }, [formData.email, role]);
+
+    const totalSteps = 4; // Increased to 4 to include OTP
     const progress = (step / totalSteps) * 100;
 
     const handleNext = () => {
+        if (step === 2) {
+            // Mock OTP Send
+            console.log("Sending OTP to", formData.email);
+            // In real app, trigger API to send OTP here
+        }
+
         if (step < totalSteps) setStep(step + 1);
     };
 
     const handleBack = () => {
         if (step > 1) setStep(step - 1);
+    };
+
+    const handleOtpChange = (index, value) => {
+        if (value.length > 1) return; // Prevent multiple chars
+        const newOtp = [...otp];
+        newOtp[index] = value;
+        setOtp(newOtp);
+
+        // Auto-focus next input
+        if (value && index < 5) {
+            const nextInput = document.getElementById(`otp-${index + 1}`);
+            if (nextInput) nextInput.focus();
+        }
     };
 
     const handleFileChange = (e) => {
@@ -35,13 +72,55 @@ export function Signup() {
         }
     };
 
-    const handleSubmit = () => {
-        // Submit logic mock
-        console.log("Submitting", formData);
-        if (role === 'employer') {
-            navigate('/employer/dashboard');
-        } else {
-            navigate('/student/dashboard');
+    const handleSubmit = async () => {
+        setError('');
+        setIsLoading(true);
+
+        try {
+            if (role === 'employer') {
+                const payload = {
+                    company_name: formData.companyName,
+                    company_type: formData.companyType,
+                    employer_email: formData.email,
+                    employer_password: formData.password,
+                    domain: formData.domain,
+                    cin: formData.companyType === 'startup' ? formData.cin : undefined,
+                    pan: formData.companyType === 'individual' ? formData.pan : undefined,
+                };
+
+                const BACKEND_URL = "http://localhost:5000/api/register_employer";
+
+                // Debug Payload
+                console.log("--------------------------------------------------");
+                console.log("🚀 SENDING PAYLOAD TO SERVER:", BACKEND_URL);
+                console.log(JSON.stringify(payload, null, 2));
+                console.log("--------------------------------------------------");
+
+                const response = await fetch(BACKEND_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.reason || data.error || "Registration failed");
+                }
+
+                alert("Backend Registration Successful! (Check Console)");
+                navigate('/employer/dashboard');
+            } else {
+                navigate('/student/dashboard');
+            }
+        } catch (err) {
+            console.error("Signup Error:", err);
+            setError(err.message);
+            // navigate to dashboard anyway for demo purposes
+            if (role === 'employer') navigate('/employer/dashboard');
+            else navigate('/student/dashboard');
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -58,8 +137,14 @@ export function Signup() {
                     </div>
                     <Progress value={progress} className="h-2" />
                     <div className="pt-6">
-                        <CardTitle className="text-2xl">Create your account</CardTitle>
-                        <CardDescription>Join the verified employment marketplace.</CardDescription>
+                        <CardTitle className="text-2xl">
+                            {step === 3 ? "Verify Email" : "Create your account"}
+                        </CardTitle>
+                        <CardDescription>
+                            {step === 3
+                                ? `We sent a code to ${formData.email}`
+                                : "Join the verified employment marketplace."}
+                        </CardDescription>
                     </div>
                 </CardHeader>
                 <CardContent>
@@ -98,7 +183,7 @@ export function Signup() {
                     {step === 2 && (
                         <div className="space-y-4">
                             <div className="space-y-2">
-                                <Label htmlFor="email">{role === 'student' ? 'University Email (Optional)' : 'Work Email'}</Label>
+                                <Label htmlFor="email">{role === 'student' ? 'University Email' : 'Work Email'}</Label>
                                 <Input
                                     id="email"
                                     type="email"
@@ -106,6 +191,11 @@ export function Signup() {
                                     value={formData.email}
                                     onChange={e => setFormData({ ...formData, email: e.target.value })}
                                 />
+                                {role === 'employer' && formData.domain && (
+                                    <p className="text-xs text-green-600 flex items-center gap-1">
+                                        <CheckCircle className="h-3 w-3" /> Domain detected: {formData.domain}
+                                    </p>
+                                )}
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="password">Password</Label>
@@ -129,6 +219,33 @@ export function Signup() {
                     )}
 
                     {step === 3 && (
+                        <div className="space-y-6 text-center">
+                            <div className="rounded-full bg-orange-50 w-16 h-16 mx-auto flex items-center justify-center text-orange-600">
+                                <Mail className="h-8 w-8" />
+                            </div>
+                            <div className="flex justify-center gap-2">
+                                {otp.map((digit, index) => (
+                                    <input
+                                        key={index}
+                                        id={`otp-${index}`}
+                                        type="text"
+                                        maxLength="1"
+                                        value={digit}
+                                        onChange={(e) => handleOtpChange(index, e.target.value)}
+                                        className="w-12 h-14 text-center text-2xl font-bold border-2 border-gray-200 rounded-lg focus:border-orange-600 focus:outline-none"
+                                    />
+                                ))}
+                            </div>
+                            <p className="text-sm text-gray-500">
+                                Didn't receive code? <button className="text-orange-600 font-semibold hover:underline">Resend</button>
+                            </p>
+                            <div className="p-3 bg-blue-50 text-blue-700 text-xs rounded-md">
+                                Mock OTP Mode: Enter any 6 digits to verify.
+                            </div>
+                        </div>
+                    )}
+
+                    {step === 4 && role === 'student' && (
                         <div className="space-y-6 text-center">
                             <div className="rounded-full bg-orange-50 w-16 h-16 mx-auto flex items-center justify-center text-orange-600">
                                 <ShieldCheck className="h-8 w-8" />
@@ -158,25 +275,99 @@ export function Signup() {
                                     </>
                                 )}
                             </div>
+                        </div>
+                    )}
 
-                            <div className="flex items-start gap-3 p-3 bg-orange-50 text-orange-700 rounded-lg text-left text-sm">
-                                <ShieldCheck className="h-5 w-5 flex-shrink-0 mt-0.5" />
-                                <p>Your data is encrypted. We only use this for one-time verification and do not store raw ID images.</p>
+                    {step === 4 && role === 'employer' && (
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="companyName">Company Name</Label>
+                                <Input
+                                    id="companyName"
+                                    value={formData.companyName}
+                                    onChange={e => setFormData({ ...formData, companyName: e.target.value })}
+                                />
                             </div>
+
+                            <div className="space-y-2">
+                                <Label>Company Type</Label>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {['mnc', 'startup', 'individual'].map((type) => (
+                                        <div
+                                            key={type}
+                                            className={cn(
+                                                "cursor-pointer text-center p-2 rounded-md border text-sm capitalize transition-colors",
+                                                formData.companyType === type
+                                                    ? "bg-orange-50 border-orange-600 text-orange-700 font-medium"
+                                                    : "border-gray-200 hover:bg-gray-50"
+                                            )}
+                                            onClick={() => setFormData({ ...formData, companyType: type })}
+                                        >
+                                            {type}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {formData.companyType === 'mnc' && (
+                                <div className="p-3 bg-blue-50 text-blue-700 text-sm rounded-md flex gap-2">
+                                    <Building2 className="h-5 w-5 flex-shrink-0" />
+                                    <div>
+                                        <p className="font-medium">MNC Verification</p>
+                                        <p className="text-xs mt-1">We will verify your domain <strong>{formData.domain}</strong> against public records.</p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {formData.companyType === 'startup' && (
+                                <div className="space-y-2">
+                                    <Label htmlFor="cin">CIN Number</Label>
+                                    <Input
+                                        id="cin"
+                                        value={formData.cin}
+                                        onChange={e => setFormData({ ...formData, cin: e.target.value })}
+                                    />
+                                </div>
+                            )}
+
+                            {formData.companyType === 'individual' && (
+                                <div className="space-y-2">
+                                    <Label htmlFor="pan">PAN Number</Label>
+                                    <Input
+                                        id="pan"
+                                        value={formData.pan}
+                                        onChange={e => setFormData({ ...formData, pan: e.target.value })}
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {error && (
+                        <div className="mt-4 p-3 bg-red-50 text-red-600 text-sm rounded-md flex items-center gap-2">
+                            <span className="font-bold">Error:</span> {error}
                         </div>
                     )}
                 </CardContent>
                 <CardFooter className="flex justify-between">
                     {step > 1 ? (
-                        <Button variant="outline" onClick={handleBack}>Back</Button>
+                        <Button variant="outline" onClick={handleBack} disabled={isLoading}>Back</Button>
                     ) : (
                         <div /> // Spacer
                     )}
 
                     {step < totalSteps ? (
-                        <Button onClick={handleNext}>Continue</Button>
+                        <Button onClick={handleNext}>
+                            {step === 3 ? "Verify OTP" : "Continue"}
+                        </Button>
                     ) : (
-                        <Button className="bg-green-600 hover:bg-green-700" onClick={handleSubmit}>Complete Verification</Button>
+                        <Button
+                            className="bg-green-600 hover:bg-green-700"
+                            onClick={handleSubmit}
+                            disabled={isLoading}
+                        >
+                            {isLoading ? 'Processing...' : 'Complete Registration'}
+                        </Button>
                     )}
                 </CardFooter>
             </Card>
