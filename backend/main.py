@@ -3,9 +3,16 @@ import jwt
 from flask_cors import CORS
 from auth import auth_bp
 from dotenv import load_dotenv
+from config import Config
+from flask_pymongo import PyMongo
+from loader.dbconnect import connectDB, mongo
 
 app = Flask(__name__)
 load_dotenv()
+
+app.config["MONGO_URI"] = Config.MONGO_URI
+connectDB(app)
+
 
 CORS(app)
 
@@ -59,5 +66,5 @@ def internal_error(error):
     }), 500
 
 if __name__ == "__main__":
-	app.run(host="0.0.0.0", port=5000, debug=True)
+	app.run(host="0.0.0.0", port=5050, debug=True)
 
