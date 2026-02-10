@@ -1,8 +1,14 @@
-from flask_pymongo import PyMongo
+from pymongo import MongoClient
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
 
-mongo = PyMongo()
+MONGO_URI = os.getenv("MONGO_URI")
 
-def connectDB(app):
-    mongo.init_app(app)
-    print("Mongo DB connected")
+client = MongoClient(MONGO_URI)
+
+db = client.get_database()  
+
+def get_db():
+    return db

@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from .otp_service import otp_service
 from .email_service import email_service
 from .employer_signup import register_employer
+from .candidate_signup import register_candidate
 import re
 
 auth_bp = Blueprint('auth', __name__)
@@ -123,4 +124,6 @@ def verify_otp():
 def employer_signup():
     return register_employer()
 
-
+@auth_bp.route('/register-candidate', methods=['POST'])
+def candidate_signup():
+    return register_candidate()

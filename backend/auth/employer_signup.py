@@ -5,7 +5,7 @@ import dns.resolver
 import whois
 import requests
 from rapidfuzz import fuzz
-from loader.dbconnect import mongo
+from loader.dbconnect import get_db
 from models.company import Company
 from models.employer import Employer
 
@@ -21,6 +21,7 @@ WEIGHTS = {
 def register_employer():
 
     data = request.json
+    db = get_db()
 
     if not data:
         return jsonify({"status": "rejected", "reason": "Request body must be JSON"}), 400
@@ -37,7 +38,7 @@ def register_employer():
 
     # ---------- CREATE EMPLOYER FIRST ----------
 
-    employer = mongo.db.employer.insert_one({
+    employer = db["employers"].insert_one({
         "email": employer_email,
     })
 
@@ -136,13 +137,13 @@ def register_employer():
         employer_id
     )
 
-    mongo.db.company.insert_one(company_payload)
+    db["companies"].insert_one(company_payload)
 
-    company = mongo.db.company.find_one({"domain": domain})
+    company = db["companies"].find_one({"domain": domain})
 
     # ---------- LINK EMPLOYER → COMPANY ----------
 
-    mongo.db.employer.update_one(
+    db["employers"].update_one(
         {"_id": employer_id},
         {"$set": {"company_id": company["_id"]}}
     )
