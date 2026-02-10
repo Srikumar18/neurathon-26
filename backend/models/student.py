@@ -2,89 +2,159 @@ from datetime import datetime, timezone
 from bson import ObjectId
 
 
-def get_current_utc_time():
-    return datetime.now(timezone.utc).isoformat()
+class Student:
 
+    @staticmethod
+    def clamp(value, min_v, max_v):
+        """Utility method to clamp a value between min and max"""
+        return max(min_v, min(max_v, value))
 
-def clamp(value, min_v, max_v):
-    return max(min_v, min(max_v, value))
+    @staticmethod
+    def get_current_utc_time():
+        """Get current UTC time in ISO format"""
+        return datetime.now(timezone.utc).isoformat()
 
+    @staticmethod
+    def create_payload(
+        # Basic information
+        full_name=None,
+        email=None,
+        phone=None,
+        linkedin=None,
+        location=None,
+        
+        # Verification data
+        email_verified=False,
+        phone_verified=False,
+        identity_verified=False,
+        student_status_verified=False,
+        profile_completeness_score=0,
+        
+        # Education data
+        institution_name=None,
+        degree=None,
+        graduation_year=None,
+        cgpa=0.0,
+        
+        # Skills data
+        primary_skills=None,
+        secondary_skills=None,
+        languages=None,
+        
+        # Behavior data
+        applications_submitted=0,
+        interview_show_rate=0.0,
+        response_rate=0.0,
+        active_streak_days=0,
+        
+        # Trust data
+        fraud_probability_score=0.0,
+        behavior_risk_level="low",
+        credibility_score=50,
+        fake_experience_detected=False,
+        
+        # Preferences data
+        looking_for=None,
+        preferred_locations=None,
+        expected_stipend_range=None,
+        
+        # System fields
+        student_id=None,
+        created_at=None
+    ):
+        """
+        Create a student payload with all required fields.
+        
+        Args:
+            All student-related fields with sensible defaults
+            
+        Returns:
+            dict: Complete student document ready for MongoDB insertion
+        """
+        
+        # Set default mutable objects
+        if primary_skills is None:
+            primary_skills = []
+        if secondary_skills is None:
+            secondary_skills = []
+        if languages is None:
+            languages = []
+        if looking_for is None:
+            looking_for = []
+        if preferred_locations is None:
+            preferred_locations = []
+        if expected_stipend_range is None:
+            expected_stipend_range = {"min": 0, "max": 0, "currency": "INR"}
+        
+        current_time = Student.get_current_utc_time()
+        
+        # ---------- Basic ----------
+        basic_info = {
+            "fullName": full_name,
+            "email": email,
+            "phone": phone,
+            "linkedin": linkedin,
+            "location": location,
+            "accountCreatedAt": created_at or current_time,
+            "lastActiveAt": current_time
+        }
 
-def generate_student_cluster(student_data=None):
+        # ---------- Verification ----------
+        verification = {
+            "emailVerified": bool(email_verified),
+            "phoneVerified": bool(phone_verified),
+            "identityVerified": bool(identity_verified),
+            "studentStatusVerified": bool(student_status_verified),
+            "profileCompletenessScore": Student.clamp(profile_completeness_score, 0, 100)
+        }
 
-    if student_data is None:
-        student_data = {}
+        # ---------- Education ----------
+        education = {
+            "institutionName": institution_name,
+            "degree": degree,
+            "graduationYear": graduation_year,
+            "cgpa": float(cgpa),
+        }
 
-    # ---------- Basic ----------
-    basic_info = {
-        "fullName": student_data.get("fullName"),
-        "email": student_data.get("email"),
-        "phone": student_data.get("phone"),
-        "linkedin": student_data.get("linkedin"),
-        "location": student_data.get("location"),
-        "accountCreatedAt": student_data.get("accountCreatedAt", get_current_utc_time()),
-        "lastActiveAt": student_data.get("lastActiveAt", get_current_utc_time())
-    }
+        # ---------- Skills ----------
+        skills = {
+            "primarySkills": primary_skills,
+            "secondarySkills": secondary_skills,
+            "languages": languages,
+        }
 
-    # ---------- Verification ----------
-    verification = {
-        "emailVerified": bool(student_data.get("emailVerified", False)),
-        "phoneVerified": bool(student_data.get("phoneVerified", False)),
-        "identityVerified": bool(student_data.get("identityVerified", False)),
-        "studentStatusVerified": bool(student_data.get("studentStatusVerified", False)),
-        "profileCompletenessScore": clamp(student_data.get("profileCompletenessScore", 0), 0, 100)
-    }
+        # ---------- Behavior ----------
+        behavior = {
+            "applicationsSubmitted": int(applications_submitted),
+            "interviewShowRate": float(interview_show_rate),
+            "responseRate": float(response_rate),
+            "activeStreakDays": int(active_streak_days)
+        }
 
-    # ---------- Education ----------
-    education = {
-        "institutionName": student_data.get("institutionName"),
-        "degree": student_data.get("degree"),
-        "graduationYear": student_data.get("graduationYear"),
-        "cgpa": float(student_data.get("cgpa", 0.0)),
-    }
+        # ---------- Trust ----------
+        trust = {
+            "fraudProbabilityScore": Student.clamp(float(fraud_probability_score), 0, 1),
+            "behaviorRiskLevel": behavior_risk_level,
+            "credibilityScore": Student.clamp(int(credibility_score), 0, 100),
+            "fakeExperienceDetected": bool(fake_experience_detected)
+        }
 
-    # ---------- Skills ----------
-    skills = {
-        "primarySkills": student_data.get("primarySkills", []),
-        "secondarySkills": student_data.get("secondarySkills", []),
-        "languages": student_data.get("languages", []),
-    }
+        # ---------- Preferences ----------
+        preferences = {
+            "lookingFor": looking_for,
+            "preferredLocations": preferred_locations,
+            "expectedStipendRange": expected_stipend_range
+        }
 
-    # ---------- Behavior ----------
-    behavior = {
-        "applicationsSubmitted": int(student_data.get("applicationsSubmitted", 0)),
-        "interviewShowRate": float(student_data.get("interviewShowRate", 0.0)),
-        "responseRate": float(student_data.get("responseRate", 0.0)),
-        "activeStreakDays": int(student_data.get("activeStreakDays", 0))
-    }
-
-    # ---------- Trust ----------
-    trust = {
-        "fraudProbabilityScore": clamp(float(student_data.get("fraudProbabilityScore", 0.0)), 0, 1),
-        "behaviorRiskLevel": student_data.get("behaviorRiskLevel", "low"),
-        "credibilityScore": clamp(int(student_data.get("credibilityScore", 50)), 0, 100),
-        "fakeExperienceDetected": bool(student_data.get("fakeExperienceDetected", False))
-    }
-
-    # ---------- Preferences ----------
-    preferences = {
-        "lookingFor": student_data.get("lookingFor", []),
-        "preferredLocations": student_data.get("preferredLocations", []),
-        "expectedStipendRange": student_data.get(
-            "expectedStipendRange",
-            {"min": 0, "max": 0, "currency": "INR"}
-        )
-    }
-
-    return {
-        "_id": student_data.get("_id", ObjectId()),
-        "basic": basic_info,
-        "verification": verification,
-        "education": education,
-        "skills": skills,
-        "behavior": behavior,
-        "trust": trust,
-        "preferences": preferences,
-        "createdAt": student_data.get("createdAt", get_current_utc_time()),
-        "updatedAt": get_current_utc_time()
-    }
+        return {
+            "_id": student_id or ObjectId(),
+            "basic": basic_info,
+            "verification": verification,
+            "education": education,
+            "skills": skills,
+            "behavior": behavior,
+            "trust": trust,
+            "preferences": preferences,
+            "createdAt": created_at or current_time,
+            "updatedAt": current_time
+        }
