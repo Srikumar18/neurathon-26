@@ -30,7 +30,7 @@ export function AdminLayout({ children }) {
                 <div className="p-6 border-b border-gray-800">
                     <Link to="/" className="flex items-center gap-2">
                         <ShieldCheck className="h-8 w-8 text-orange-500" />
-                        <span className="text-xl font-bold">TrustHire Admin</span>
+                        <span className="text-xl font-bold">HirePro Admin</span>
                     </Link>
                 </div>
 

@@ -22,7 +22,7 @@ export function StudentLayout({ children }) {
                         <div className="flex">
                             <Link to="/" className="flex-shrink-0 flex items-center gap-2">
                                 <ShieldCheck className="h-8 w-8 text-orange-600" />
-                                <span className="text-xl font-bold text-gray-900">TrustHire</span>
+                                <span className="text-xl font-bold text-gray-900">HirePro</span>
                             </Link>
                             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
                                 {navItems.map((item) => {

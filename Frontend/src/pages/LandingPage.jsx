@@ -15,7 +15,7 @@ export function LandingPage() {
                             Building <span className="text-orange-600">trust</span> into hiring.
                         </h1>
                         <p className="text-lg text-gray-600 mb-8 leading-relaxed">
-                            TrustHire is the fraud-resistant employment marketplace. We verify every identity, validate every job, and build a safer community for students and employers.
+                            HirePro is the fraud-resistant employment marketplace. We verify every identity, validate every job, and build a safer community for students and employers.
                         </p>
                         <div className="flex flex-col sm:flex-row justify-center gap-4">
                             <Link to="/signup">
@@ -39,7 +39,7 @@ export function LandingPage() {
             <section className="bg-gray-50 py-16">
                 <div className="container mx-auto px-4">
                     <div className="text-center mb-12">
-                        <h2 className="text-3xl font-bold text-gray-900">Why TrustHire?</h2>
+                        <h2 className="text-3xl font-bold text-gray-900">Why HirePro?</h2>
                         <p className="mt-4 text-gray-600">We've redesigned the hiring process to eliminate fraud and ghosting.</p>
                     </div>
 
@@ -87,7 +87,7 @@ export function LandingPage() {
             <section className="bg-white py-16">
                 <div className="container mx-auto px-4 max-w-5xl">
                     <div className="text-center mb-16">
-                        <h2 className="text-3xl font-bold text-gray-900">How TrustHire Works</h2>
+                        <h2 className="text-3xl font-bold text-gray-900">How HirePro Works</h2>
                     </div>
 
                     <div className="relative">

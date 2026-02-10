@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Progress } from '../../components/ui/Badge';
 import { ShieldCheck, User, Briefcase, Upload, CheckCircle, Building2, Mail } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import axiosInstance from '../../lib/axios';
 
 export function Signup() {
     const navigate = useNavigate();
@@ -14,6 +15,7 @@ export function Signup() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const [otp, setOtp] = useState(['', '', '', '', '', '']);
+    const [otpSent, setOtpSent] = useState(false);
 
     const [formData, setFormData] = useState({
         email: '',
@@ -39,11 +41,84 @@ export function Signup() {
     const totalSteps = 4; // Increased to 4 to include OTP
     const progress = (step / totalSteps) * 100;
 
-    const handleNext = () => {
+    // Send OTP function
+    const sendOtp = async () => {
+        setError('');
+        setIsLoading(true);
+
+        try {
+            const response = await axiosInstance.post('/auth/candidate-send-otp', {
+                email: formData.email
+            });
+
+            console.log('OTP sent successfully:', response.data);
+            setOtpSent(true);
+            setStep(3); // Move to OTP verification step
+        } catch (err) {
+            console.error('Error sending OTP:', err);
+            setError(err.response?.data?.message || 'Failed to send OTP. Please try again.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Verify OTP function
+    const verifyOtp = async () => {
+        setError('');
+        setIsLoading(true);
+
+        const otpString = otp.join('');
+
+        if (otpString.length !== 6) {
+            setError('Please enter a valid 6-digit OTP');
+            setIsLoading(false);
+            return;
+        }
+
+        try {
+            const response = await axiosInstance.post('/auth/candidate-verify-otp', {
+                email: formData.email,
+                otp: otpString
+            });
+
+            console.log('OTP verified successfully:', response.data);
+            setStep(4); // Move to next step after successful verification
+        } catch (err) {
+            console.error('Error verifying OTP:', err);
+            setError(err.response?.data?.message || 'Invalid OTP. Please try again.');
+            setOtp(['', '', '', '', '', '']); // Clear OTP inputs
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Resend OTP function
+    const resendOtp = async () => {
+        setOtp(['', '', '', '', '', '']); // Clear existing OTP
+        await sendOtp();
+    };
+
+    const handleNext = async () => {
+        setError('');
+
+        // Validation for step 2
         if (step === 2) {
-            // Mock OTP Send
-            console.log("Sending OTP to", formData.email);
-            // In real app, trigger API to send OTP here
+            if (!formData.email) {
+                setError('Please enter your email');
+                return;
+            }
+            if (!formData.password) {
+                setError('Please enter a password');
+                return;
+            }
+            if (formData.password !== formData.confirmPassword) {
+                setError('Passwords do not match');
+                return;
+            }
+
+            // Send OTP when moving from step 2 to step 3
+            await sendOtp();
+            return;
         }
 
         if (step < totalSteps) setStep(step + 1);
@@ -88,7 +163,6 @@ export function Signup() {
                     pan: formData.companyType === 'individual' ? formData.pan : undefined,
                 };
 
-                const BACKEND_URL = "http://localhost:5000/api/register_employer";
 
                 // Debug Payload
                 console.log("--------------------------------------------------");
@@ -96,13 +170,7 @@ export function Signup() {
                 console.log(JSON.stringify(payload, null, 2));
                 console.log("--------------------------------------------------");
 
-                const response = await fetch(BACKEND_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload),
-                });
-
-                const data = await response.json();
+                const response = await axiosInstance.post('/auth/register-user', payload);
 
                 if (!response.ok) {
                     throw new Error(data.reason || data.error || "Registration failed");
@@ -131,7 +199,7 @@ export function Signup() {
                     <div className="flex items-center justify-between mb-2">
                         <Link to="/" className="flex items-center gap-2 text-orange-600">
                             <ShieldCheck className="h-6 w-6" />
-                            <span className="font-bold text-lg">TrustHire</span>
+                            <span className="font-bold text-lg">HirePro</span>
                         </Link>
                         <span className="text-sm text-gray-500">Step {step} of {totalSteps}</span>
                     </div>
@@ -233,15 +301,20 @@ export function Signup() {
                                         value={digit}
                                         onChange={(e) => handleOtpChange(index, e.target.value)}
                                         className="w-12 h-14 text-center text-2xl font-bold border-2 border-gray-200 rounded-lg focus:border-orange-600 focus:outline-none"
+                                        disabled={isLoading}
                                     />
                                 ))}
                             </div>
                             <p className="text-sm text-gray-500">
-                                Didn't receive code? <button className="text-orange-600 font-semibold hover:underline">Resend</button>
+                                Didn't receive code? <button
+                                    type="button"
+                                    onClick={resendOtp}
+                                    disabled={isLoading}
+                                    className="text-orange-600 font-semibold hover:underline disabled:opacity-50"
+                                >
+                                    Resend
+                                </button>
                             </p>
-                            <div className="p-3 bg-blue-50 text-blue-700 text-xs rounded-md">
-                                Mock OTP Mode: Enter any 6 digits to verify.
-                            </div>
                         </div>
                     )}
 
@@ -357,8 +430,8 @@ export function Signup() {
                     )}
 
                     {step < totalSteps ? (
-                        <Button onClick={handleNext}>
-                            {step === 3 ? "Verify OTP" : "Continue"}
+                        <Button onClick={step === 3 ? verifyOtp : handleNext} disabled={isLoading}>
+                            {isLoading ? 'Processing...' : (step === 3 ? "Verify OTP" : "Continue")}
                         </Button>
                     ) : (
                         <Button

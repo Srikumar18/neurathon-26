@@ -36,7 +36,7 @@ export function EmployerLayout({ children }) {
                 <div className="p-6">
                     <Link to="/" className="flex items-center gap-2">
                         <ShieldCheck className="h-8 w-8 text-orange-600" />
-                        <span className="text-xl font-bold text-gray-900">TrustHire</span>
+                        <span className="text-xl font-bold text-gray-900">HirePro</span>
                     </Link>
                 </div>
 

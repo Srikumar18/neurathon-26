@@ -9,7 +9,7 @@ export function Footer() {
                     <div className="col-span-1 md:col-span-1">
                         <div className="flex items-center gap-2 mb-4">
                             <ShieldCheck className="h-6 w-6 text-blue-600" />
-                            <span className="text-lg font-bold text-gray-900">TrustHire</span>
+                            <span className="text-lg font-bold text-gray-900">HirePro</span>
                         </div>
                         <p className="text-sm text-gray-500">
                             Building trust into hiring. Validated profiles, verified jobs, and a safer community for everyone.
@@ -40,7 +40,7 @@ export function Footer() {
                     </div>
                 </div>
                 <div className="mt-12 pt-8 border-t border-gray-100 text-center">
-                    <p className="text-sm text-gray-400">&copy; 2026 TrustHire Inc. All rights reserved.</p>
+                    <p className="text-sm text-gray-400">&copy; 2026 HirePro Inc. All rights reserved.</p>
                 </div>
             </div>
         </footer>

@@ -70,7 +70,7 @@ export function CompanyProfile() {
                         <CardContent>
                             <div className="border border-gray-200 rounded-lg p-4 text-center">
                                 <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-600 text-white rounded-full text-sm font-semibold mb-2">
-                                    <ShieldCheck className="h-4 w-4" /> TrustHire Verified
+                                    <ShieldCheck className="h-4 w-4" /> HirePro Verified
                                 </div>
                                 <p className="text-xs text-gray-500">Embed this badge on your careers page.</p>
                                 <Button variant="outline" size="sm" className="mt-3 w-full">Copy Code</Button>

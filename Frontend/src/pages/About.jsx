@@ -27,7 +27,7 @@ export function About() {
                                 The modern hiring process is broken. Recruitment scams are at an all-time high, and "ghost jobs" waste millions of hours for job seekers every year.
                             </p>
                             <p className="text-gray-600 text-lg">
-                                TrustHire was born from a simple idea: <strong>What if everyone on a diverse career platform verified their identity first?</strong> By removing anonymity, we remove the bad actors.
+                                HirePro was born from a simple idea: <strong>What if everyone on a diverse career platform verified their identity first?</strong> By removing anonymity, we remove the bad actors.
                             </p>
                         </div>
                         <div className="grid grid-cols-2 gap-4">

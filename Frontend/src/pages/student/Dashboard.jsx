@@ -35,7 +35,7 @@ export function StudentDashboard() {
                     ...profile,
                     skills: 'React, Node.js, Python, AWS (Extracted from Resume)',
                     experience: 'Software Engineer Intern @ Google (Extracted)',
-                    projects: 'TrustHire Capstone (Extracted)'
+                    projects: 'HirePro Capstone (Extracted)'
                 });
             }, 1500);
         }
